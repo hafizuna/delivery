@@ -1,0 +1,556 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ============== USER MANAGEMENT ==============
+
+enum UserRole {
+  customer
+  driver
+  restaurant
+  admin
+}
+
+model User {
+  id                   String    @id @default(uuid())
+  phoneNumber          String    @unique
+  countryCode          String    @default("+251")
+  passwordHash         String
+  firstName            String
+  lastName             String
+  email                String?
+  profilePictureURL    String?   @db.Text
+  fcmToken             String?   @db.Text
+  walletAmount         Decimal   @default(0) @db.Decimal(10, 2)
+  active               Boolean   @default(true)
+  isActive             Boolean   @default(true)
+  isDocumentVerify     Boolean   @default(false)
+  role                 UserRole
+  provider             String?   // google, apple, phone
+  appIdentifier        String?
+  zoneId               String?
+  
+  // Driver specific
+  carName              String?
+  carNumber            String?
+  carPictureURL        String?   @db.Text
+  latitude             Float?
+  longitude            Float?
+  rotation             Float?    @default(0)
+  
+  // Restaurant owner specific
+  vendorId             String?   @unique
+  
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  
+  // Relations
+  shippingAddresses    ShippingAddress[]
+  ordersAsCustomer     Order[]              @relation("CustomerOrders")
+  ordersAsDriver       Order[]              @relation("DriverOrders")
+  vendor               Vendor?              @relation(fields: [vendorId], references: [id])
+  zone                 Zone?                @relation(fields: [zoneId], references: [id])
+  walletTransactions   WalletTransaction[]
+  sentMessages         ChatMessage[]        @relation("SentMessages")
+  favoriteRestaurants  FavoriteRestaurant[]
+  favoriteItems        FavoriteItem[]
+  reviews              Review[]
+  giftCardPurchases    GiftCardPurchase[]
+  referrals            Referral[]
+  driverPayouts        DriverPayout[]
+  
+  @@index([phoneNumber])
+  @@index([role])
+  @@index([zoneId])
+  @@map("users")
+}
+
+model ShippingAddress {
+  id         String   @id @default(uuid())
+  userId     String
+  address    String   @db.Text
+  addressAs  String   // Home, Work, Other
+  landmark   String?  @db.Text
+  locality   String   @db.Text
+  latitude   Float
+  longitude  Float
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@map("shipping_addresses")
+}
+
+// ============== RESTAURANT/VENDOR ==============
+
+model Vendor {
+  id                      String    @id @default(uuid())
+  title                   String
+  description             String?   @db.Text
+  photo                   String?   @db.Text
+  latitude                Float
+  longitude               Float
+  location                String    @db.Text
+  phoneNumber             String
+  categoryId              String
+  restaurantCost          Decimal   @db.Decimal(10, 2)
+  hidephotos              Boolean   @default(false)
+  reststatus              Boolean   @default(true)
+  reviewsCount            Int       @default(0)
+  reviewsSum              Float     @default(0)
+  zoneId                  String
+  fcmToken                String?   @db.Text
+  walletAmount            Decimal   @default(0) @db.Decimal(10, 2)
+  
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  
+  // Relations
+  category                VendorCategory     @relation(fields: [categoryId], references: [id])
+  zone                    Zone               @relation(fields: [zoneId], references: [id])
+  owner                   User?
+  photos                  VendorPhoto[]
+  menuPhotos              VendorMenuPhoto[]
+  workingHours            VendorWorkingHour[]
+  specialDiscounts        VendorSpecialDiscount[]
+  products                Product[]
+  orders                  Order[]
+  
+  @@index([categoryId])
+  @@index([zoneId])
+  @@map("vendors")
+}
+
+model VendorCategory {
+  id         String   @id @default(uuid())
+  title      String
+  photo      String?  @db.Text
+  createdAt  DateTime @default(now())
+  
+  vendors    Vendor[]
+  
+  @@map("vendor_categories")
+}
+
+model VendorPhoto {
+  id        String @id @default(uuid())
+  vendorId  String
+  url       String @db.Text
+  
+  vendor    Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  
+  @@index([vendorId])
+  @@map("vendor_photos")
+}
+
+model VendorMenuPhoto {
+  id        String @id @default(uuid())
+  vendorId  String
+  url       String @db.Text
+  
+  vendor    Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  
+  @@index([vendorId])
+  @@map("vendor_menu_photos")
+}
+
+model VendorWorkingHour {
+  id        String  @id @default(uuid())
+  vendorId  String
+  day       String  // Monday, Tuesday, etc.
+  fromTime  String?
+  toTime    String?
+  
+  vendor    Vendor  @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  
+  @@index([vendorId])
+  @@map("vendor_working_hours")
+}
+
+model VendorSpecialDiscount {
+  id           String  @id @default(uuid())
+  vendorId     String
+  day          String
+  discount     String
+  fromTime     String
+  toTime       String
+  type         String  // percentage, amount
+  
+  vendor       Vendor  @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  
+  @@index([vendorId])
+  @@map("vendor_special_discounts")
+}
+
+// ============== PRODUCTS/MENU ==============
+
+model Product {
+  id              String   @id @default(uuid())
+  vendorId        String
+  name            String
+  description     String?  @db.Text
+  photo           String?  @db.Text
+  price           Decimal  @db.Decimal(10, 2)
+  discountPrice   Decimal? @db.Decimal(10, 2)
+  categoryId      String?
+  isAvailable     Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  vendor          Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  photos          ProductPhoto[]
+  
+  @@index([vendorId])
+  @@index([categoryId])
+  @@map("products")
+}
+
+model ProductPhoto {
+  id        String @id @default(uuid())
+  productId String
+  url       String @db.Text
+  
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@index([productId])
+  @@map("product_photos")
+}
+
+// ============== ORDERS ==============
+
+enum OrderStatus {
+  Order_Placed
+  Order_Accepted
+  Order_Rejected
+  Driver_Pending
+  Driver_Accepted
+  Driver_Rejected
+  Order_Shipped
+  In_Transit
+  Order_Completed
+  Order_Cancelled
+}
+
+model Order {
+  id                     String      @id @default(uuid())
+  customerId             String
+  vendorId               String
+  driverId               String?
+  status                 OrderStatus @default(Order_Placed)
+  
+  // Address
+  addressId              String?
+  deliveryAddress        String?     @db.Text
+  deliveryLatitude       Float?
+  deliveryLongitude      Float?
+  deliveryLocality       String?     @db.Text
+  deliveryLandmark       String?     @db.Text
+  
+  // Pricing
+  subtotal               Decimal     @db.Decimal(10, 2)
+  discount               Decimal     @default(0) @db.Decimal(10, 2)
+  deliveryCharge         Decimal     @default(0) @db.Decimal(10, 2)
+  tipAmount              Decimal     @default(0) @db.Decimal(10, 2)
+  totalAmount            Decimal     @db.Decimal(10, 2)
+  
+  // Platform commission (from settings)
+  platformCommission     Decimal     @db.Decimal(10, 2)
+  deliveryCommission     Decimal     @db.Decimal(10, 2)
+  
+  // Discount/Coupon
+  couponId               String?
+  couponCode             String?
+  specialDiscount        Json?
+  
+  // Payment
+  paymentMethod          String
+  paymentStatus          String      @default("pending")
+  
+  // Delivery
+  takeAway               Boolean     @default(false)
+  estimatedTimeToPrepare String?
+  scheduleTime           DateTime?
+  triggerDelivery        DateTime?
+  
+  // Notes
+  notes                  String?     @db.Text
+  
+  // Driver rejection tracking
+  rejectedByDrivers      Json?
+  
+  createdAt              DateTime    @default(now())
+  updatedAt              DateTime    @updatedAt
+  completedAt            DateTime?
+  
+  // Relations
+  customer               User        @relation("CustomerOrders", fields: [customerId], references: [id])
+  vendor                 Vendor      @relation(fields: [vendorId], references: [id])
+  driver                 User?       @relation("DriverOrders", fields: [driverId], references: [id])
+  items                  OrderItem[]
+  statusHistory          OrderStatusHistory[]
+  
+  @@index([customerId])
+  @@index([vendorId])
+  @@index([driverId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id            String  @id @default(uuid())
+  orderId       String
+  productId     String
+  productName   String
+  quantity      Int
+  price         Decimal @db.Decimal(10, 2)
+  discountPrice Decimal? @db.Decimal(10, 2)
+  
+  order         Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  @@index([orderId])
+  @@map("order_items")
+}
+
+model OrderStatusHistory {
+  id        String      @id @default(uuid())
+  orderId   String
+  status    OrderStatus
+  changedAt DateTime    @default(now())
+  changedBy String?
+  note      String?     @db.Text
+  
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  @@index([orderId])
+  @@map("order_status_history")
+}
+
+// ============== CHAT SYSTEM ==============
+
+model ChatMessage {
+  id             String   @id @default(uuid())
+  orderId        String
+  senderId       String
+  receiverId     String
+  message        String   @db.Text
+  messageType    String   @default("text") // text, image, video, audio
+  mediaUrl       String?  @db.Text
+  mediaMimeType  String?
+  videoThumbnail String?  @db.Text
+  isRead         Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  
+  sender         User     @relation("SentMessages", fields: [senderId], references: [id])
+  
+  @@index([orderId])
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([createdAt])
+  @@map("chat_messages")
+}
+
+// ============== ZONES ==============
+
+model Zone {
+  id        String   @id @default(uuid())
+  name      String
+  area      Json     // Polygon coordinates
+  publish   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  
+  vendors   Vendor[]
+  users     User[]
+  
+  @@map("zones")
+}
+
+// ============== COUPONS ==============
+
+model Coupon {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  description String?  @db.Text
+  discount    Decimal  @db.Decimal(10, 2)
+  discountType String  // percentage, amount
+  minOrder    Decimal? @db.Decimal(10, 2)
+  maxDiscount Decimal? @db.Decimal(10, 2)
+  validFrom   DateTime
+  validTo     DateTime
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  
+  @@map("coupons")
+}
+
+// ============== WALLET ==============
+
+model WalletTransaction {
+  id              String   @id @default(uuid())
+  userId          String
+  amount          Decimal  @db.Decimal(10, 2)
+  type            String   // credit, debit
+  transactionType String   // order, refund, topup, withdrawal
+  orderId         String?
+  note            String?  @db.Text
+  createdAt       DateTime @default(now())
+  
+  user            User     @relation(fields: [userId], references: [id])
+  
+  @@index([userId])
+  @@index([createdAt])
+  @@map("wallet_transactions")
+}
+
+// ============== FAVORITES ==============
+
+model FavoriteRestaurant {
+  id         String   @id @default(uuid())
+  userId     String
+  vendorId   String
+  createdAt  DateTime @default(now())
+  
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, vendorId])
+  @@index([userId])
+  @@map("favorite_restaurants")
+}
+
+model FavoriteItem {
+  id         String   @id @default(uuid())
+  userId     String
+  productId  String
+  createdAt  DateTime @default(now())
+  
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, productId])
+  @@index([userId])
+  @@map("favorite_items")
+}
+
+// ============== REVIEWS ==============
+
+model Review {
+  id        String   @id @default(uuid())
+  userId    String
+  vendorId  String?
+  productId String?
+  rating    Float
+  comment   String?  @db.Text
+  photos    Json?
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id])
+  
+  @@index([userId])
+  @@index([vendorId])
+  @@index([productId])
+  @@map("reviews")
+}
+
+// ============== GIFT CARDS ==============
+
+model GiftCard {
+  id          String   @id @default(uuid())
+  title       String
+  amount      Decimal  @db.Decimal(10, 2)
+  description String?  @db.Text
+  imageUrl    String?  @db.Text
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  
+  purchases   GiftCardPurchase[]
+  
+  @@map("gift_cards")
+}
+
+model GiftCardPurchase {
+  id         String   @id @default(uuid())
+  giftCardId String
+  userId     String
+  code       String   @unique
+  amount     Decimal  @db.Decimal(10, 2)
+  isRedeemed Boolean  @default(false)
+  redeemedBy String?
+  redeemedAt DateTime?
+  createdAt  DateTime @default(now())
+  
+  giftCard   GiftCard @relation(fields: [giftCardId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+  
+  @@index([userId])
+  @@index([code])
+  @@map("gift_card_purchases")
+}
+
+// ============== REFERRALS ==============
+
+model Referral {
+  id           String   @id @default(uuid())
+  userId       String
+  referralCode String   @unique
+  referredBy   String?
+  createdAt    DateTime @default(now())
+  
+  user         User     @relation(fields: [userId], references: [id])
+  
+  @@index([userId])
+  @@index([referralCode])
+  @@map("referrals")
+}
+
+// ============== DRIVER PAYOUTS ==============
+
+model DriverPayout {
+  id            String   @id @default(uuid())
+  driverId      String
+  amount        Decimal  @db.Decimal(10, 2)
+  payoutMethod  String
+  status        String   @default("pending")
+  note          String?  @db.Text
+  processedAt   DateTime?
+  createdAt     DateTime @default(now())
+  
+  driver        User     @relation(fields: [driverId], references: [id])
+  
+  @@index([driverId])
+  @@map("driver_payouts")
+}
+
+// ============== NOTIFICATIONS ==============
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String?
+  title     String
+  body      String   @db.Text
+  type      String   // order, promotion, general
+  data      Json?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  
+  @@index([userId])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+// ============== ADMIN SETTINGS ==============
+
+model AppSettings {
+  id    String @id @default(uuid())
+  key   String @unique
+  value Json
+  
+  @@map("app_settings")
+}

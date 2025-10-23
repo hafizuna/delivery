@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Prisma
+prisma/migrations/*_backup/
+
+# Uploads
+uploads/*
+!uploads/profiles/
+!uploads/products/
+!uploads/vendors/
+!uploads/chat/
+uploads/profiles/*
+uploads/products/*
+uploads/vendors/*
+uploads/chat/*
+
+# Keep placeholder files
+!uploads/**/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Firebase Service Account (sensitive)
+serviceAccountKey.json
+
+# Build
+dist/
+build/

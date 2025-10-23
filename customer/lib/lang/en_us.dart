@@ -1,0 +1,80 @@
+const Map<String, String> enUS = {
+  // Common
+  'app_name': 'Foodie Customer',
+  'welcome': 'Welcome',
+  'hello': 'Hello',
+  'yes': 'Yes',
+  'no': 'No',
+  'ok': 'OK',
+  'cancel': 'Cancel',
+  'save': 'Save',
+  'delete': 'Delete',
+  'edit': 'Edit',
+  'done': 'Done',
+  'skip': 'Skip',
+  'next': 'Next',
+  'back': 'Back',
+  'submit': 'Submit',
+  'confirm': 'Confirm',
+  'loading': 'Loading...',
+  'please_wait': 'Please wait',
+  'error': 'Error',
+  'success': 'Success',
+  'warning': 'Warning',
+  'info': 'Info',
+  
+  // Auth
+  'login': 'Login',
+  'signup': 'Sign Up',
+  'logout': 'Logout',
+  'phone_number': 'Phone Number',
+  'password': 'Password',
+  'confirm_password': 'Confirm Password',
+  'email': 'Email',
+  'first_name': 'First Name',
+  'last_name': 'Last Name',
+  'forgot_password': 'Forgot Password?',
+  'dont_have_account': "Don't have an account?",
+  'already_have_account': 'Already have an account?',
+  
+  // Home
+  'home': 'Home',
+  'search': 'Search',
+  'categories': 'Categories',
+  'popular_restaurants': 'Popular Restaurants',
+  'new_arrivals': 'New Arrivals',
+  'see_all': 'See All',
+  'delivery': 'Delivery',
+  'pickup': 'Pickup',
+  
+  // Orders
+  'orders': 'Orders',
+  'my_orders': 'My Orders',
+  'order_details': 'Order Details',
+  'order_status': 'Order Status',
+  'track_order': 'Track Order',
+  'cancel_order': 'Cancel Order',
+  
+  // Profile
+  'profile': 'Profile',
+  'my_profile': 'My Profile',
+  'edit_profile': 'Edit Profile',
+  'settings': 'Settings',
+  'addresses': 'Addresses',
+  'wallet': 'Wallet',
+  'favorites': 'Favorites',
+  'help': 'Help',
+  'about': 'About',
+  
+  // Cart
+  'cart': 'Cart',
+  'add_to_cart': 'Add to Cart',
+  'checkout': 'Checkout',
+  'subtotal': 'Subtotal',
+  'delivery_charge': 'Delivery Charge',
+  'tax': 'Tax',
+  'discount': 'Discount',
+  'total': 'Total',
+  
+  // More translations will be added as needed
+};
