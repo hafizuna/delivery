@@ -38,7 +38,7 @@ class ProductModel {
       description: json['description'],
       photo: json['photo'],
       price: _parseDouble(json['price']) ?? 0.0,
-      discountPrice: _parseDouble(json['discountPrice']),
+      discountPrice: json['discountPrice'] != null ? _parseDouble(json['discountPrice']) : null,
       categoryId: json['categoryId'],
       isAvailable: json['isAvailable'] ?? true,
       createdAt: json['createdAt'],

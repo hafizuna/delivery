@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
+import '../config/app_config.dart';
 import 'package:customer/constant/show_toast_dialog.dart';
 import 'package:customer/models/cart_product_model.dart';
 import 'package:customer/models/coupon_model.dart';
@@ -32,7 +33,12 @@ class Constant {
   static String userRoleVendor = 'restaurant';
   
   // Current User & Location
-  static ShippingAddress selectedLocation = ShippingAddress();
+  static ShippingAddress selectedLocation = ShippingAddress(
+    latitude: 9.0320,  // Addis Ababa Central (matches seed data)
+    longitude: 38.7469,
+    address: 'Addis Ababa, Ethiopia',
+    locality: 'Addis Ababa Central',
+  );
   static UserModel? userModel;
   
   // Zone
@@ -41,7 +47,8 @@ class Constant {
   
   // App Settings
   static String theme = "theme_1";
-  static String mapAPIKey = "";
+  // Use secure configuration from AppConfig
+  static String get mapAPIKey => AppConfig.googleMapsApiKey;
   static String placeHolderImage = "";
   static String radius = "50";
   static String driverRadios = "50";
@@ -191,6 +198,50 @@ class Constant {
     }
   }
   
+  /// Convert timestamp to readable date format
+  static String timestampToDateTime(String timestamp) {
+    try {
+      DateTime dateTime = DateTime.parse(timestamp);
+      return DateFormat('MMM dd, yyyy • hh:mm a').format(dateTime);
+    } catch (e) {
+      return timestamp; // Return original if parsing fails
+    }
+  }
+  
+  /// Show empty view widget
+  static Widget showEmptyView({String? message}) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.inbox_outlined,
+            size: 64,
+            color: AppThemeData.grey400,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            message ?? "No data found",
+            style: TextStyle(
+              color: AppThemeData.grey600,
+              fontSize: 16,
+              fontFamily: AppThemeData.medium,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  /// Show loader widget
+  static Widget loader() {
+    return Center(
+      child: CircularProgressIndicator(
+        color: AppThemeData.primary300,
+      ),
+    );
+  }
+  
   /// Calculate review rating
   static double calculateReview({
     required String reviewCount,
@@ -283,7 +334,7 @@ class Constant {
   }
 
   /// Simple loading widget for network images
-  static Widget loader() {
+  static Widget simpleLoader() {
     return Container(
       padding: const EdgeInsets.all(10),
       child: const Center(

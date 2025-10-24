@@ -1,7 +1,10 @@
 import 'package:customer/app/splash/splash_screen.dart';
 import 'package:customer/services/localization_service.dart';
+import 'package:customer/services/cart_provider.dart';
+import 'package:customer/services/database_helper.dart';
+import 'package:customer/services/api_service.dart';
+import 'package:customer/services/socket_service.dart';
 import 'package:customer/themes/app_them_data.dart';
-import 'package:customer/utils/dark_theme_preference.dart';
 import 'package:customer/utils/dark_theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -12,6 +15,13 @@ import 'package:provider/provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
+  // Initialize database
+  await _initializeDatabase();
+  
+  // Initialize services
+  Get.lazyPut<ApiService>(() => ApiService(), fenix: true);
+  Get.lazyPut<SocketService>(() => SocketService(), fenix: true);
+  Get.put(CartProvider(), permanent: true);
   
   // Set system UI overlay style
   SystemChrome.setSystemUIOverlayStyle(
@@ -22,6 +32,16 @@ void main() async {
   );
   
   runApp(const MyApp());
+}
+
+Future<void> _initializeDatabase() async {
+  try {
+    // Initialize the database by calling it once
+    await DatabaseHelper.instance.database;
+    print('🗄️ Database initialized successfully');
+  } catch (e) {
+    print('❌ Database initialization failed: $e');
+  }
 }
 
 class MyApp extends StatefulWidget {

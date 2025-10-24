@@ -1,4 +1,5 @@
 // Order Model - Matches Prisma schema exactly
+import 'vendor_model.dart';
 class OrderModel {
   String? id;
   String customerId;
@@ -51,8 +52,18 @@ class OrderModel {
   String? updatedAt;
   String? completedAt;
   
+  // Display fields
+  String? orderId; // Formatted order ID for display
+  
   // Relations
   List<OrderItem>? items;
+  VendorModel? vendor;
+  
+  // Convenience getters for field name consistency
+  double? get subTotal => subtotal;
+  double? get tax => 0.0; // Add tax calculation if needed
+  double? get total => totalAmount;
+  DateTime? get createdAtDate => this.createdAt != null ? DateTime.tryParse(this.createdAt!) : null;
   
   OrderModel({
     this.id,
@@ -87,7 +98,9 @@ class OrderModel {
     this.createdAt,
     this.updatedAt,
     this.completedAt,
+    this.orderId,
     this.items,
+    this.vendor,
   });
   
   factory OrderModel.fromJson(Map<String, dynamic> json) {
@@ -128,8 +141,12 @@ class OrderModel {
       createdAt: json['createdAt'],
       updatedAt: json['updatedAt'],
       completedAt: json['completedAt'],
+      orderId: json['orderId'],
       items: json['items'] != null
           ? (json['items'] as List).map((e) => OrderItem.fromJson(e)).toList()
+          : null,
+      vendor: json['vendor'] != null
+          ? VendorModel.fromJson(json['vendor'])
           : null,
     );
   }
@@ -168,8 +185,86 @@ class OrderModel {
       'createdAt': createdAt,
       'updatedAt': updatedAt,
       'completedAt': completedAt,
+      'orderId': orderId,
       'items': items?.map((e) => e.toJson()).toList(),
+      'vendor': vendor?.toJson(),
     };
+  }
+  
+  OrderModel copyWith({
+    String? id,
+    String? customerId,
+    String? vendorId,
+    String? driverId,
+    String? status,
+    String? addressId,
+    String? deliveryAddress,
+    double? deliveryLatitude,
+    double? deliveryLongitude,
+    String? deliveryLocality,
+    String? deliveryLandmark,
+    double? subtotal,
+    double? discount,
+    double? deliveryCharge,
+    double? tipAmount,
+    double? totalAmount,
+    double? platformCommission,
+    double? deliveryCommission,
+    String? couponId,
+    String? couponCode,
+    Map<String, dynamic>? specialDiscount,
+    String? paymentMethod,
+    String? paymentStatus,
+    bool? takeAway,
+    String? estimatedTimeToPrepare,
+    String? scheduleTime,
+    String? triggerDelivery,
+    String? notes,
+    List<String>? rejectedByDrivers,
+    String? createdAt,
+    String? updatedAt,
+    String? completedAt,
+    String? orderId,
+    List<OrderItem>? items,
+    VendorModel? vendor,
+  }) {
+    return OrderModel(
+      id: id ?? this.id,
+      customerId: customerId ?? this.customerId,
+      vendorId: vendorId ?? this.vendorId,
+      driverId: driverId ?? this.driverId,
+      status: status ?? this.status,
+      addressId: addressId ?? this.addressId,
+      deliveryAddress: deliveryAddress ?? this.deliveryAddress,
+      deliveryLatitude: deliveryLatitude ?? this.deliveryLatitude,
+      deliveryLongitude: deliveryLongitude ?? this.deliveryLongitude,
+      deliveryLocality: deliveryLocality ?? this.deliveryLocality,
+      deliveryLandmark: deliveryLandmark ?? this.deliveryLandmark,
+      subtotal: subtotal ?? this.subtotal,
+      discount: discount ?? this.discount,
+      deliveryCharge: deliveryCharge ?? this.deliveryCharge,
+      tipAmount: tipAmount ?? this.tipAmount,
+      totalAmount: totalAmount ?? this.totalAmount,
+      platformCommission: platformCommission ?? this.platformCommission,
+      deliveryCommission: deliveryCommission ?? this.deliveryCommission,
+      couponId: couponId ?? this.couponId,
+      couponCode: couponCode ?? this.couponCode,
+      specialDiscount: specialDiscount ?? this.specialDiscount,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
+      paymentStatus: paymentStatus ?? this.paymentStatus,
+      takeAway: takeAway ?? this.takeAway,
+      estimatedTimeToPrepare: estimatedTimeToPrepare ?? this.estimatedTimeToPrepare,
+      scheduleTime: scheduleTime ?? this.scheduleTime,
+      triggerDelivery: triggerDelivery ?? this.triggerDelivery,
+      notes: notes ?? this.notes,
+      rejectedByDrivers: rejectedByDrivers ?? this.rejectedByDrivers,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      completedAt: completedAt ?? this.completedAt,
+      orderId: orderId ?? this.orderId,
+      items: items ?? this.items,
+      vendor: vendor ?? this.vendor,
+    );
   }
   
   static double? _parseDouble(dynamic value) {

@@ -19,8 +19,19 @@ class CartProvider with ChangeNotifier {
   }
 
   Future<void> _initCart() async {
-    _cartItems = await DatabaseHelper.instance.fetchCartProducts();
-    _cartStreamController.sink.add(_cartItems);
+    try {
+      _cartItems = await DatabaseHelper.instance.fetchCartProducts();
+      // Update global cart items
+      cartItem.clear();
+      cartItem.addAll(_cartItems);
+      _cartStreamController.sink.add(_cartItems);
+      print('🛒 Cart initialized with ${_cartItems.length} items');
+    } catch (e) {
+      print('❌ Cart initialization failed: $e');
+      _cartItems = [];
+      cartItem.clear();
+      _cartStreamController.sink.add(_cartItems);
+    }
   }
 
   Future<void> addToCart(BuildContext context, CartProductModel product, int quantity) async {

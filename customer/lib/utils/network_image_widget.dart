@@ -31,7 +31,7 @@ class NetworkImageWidget extends StatelessWidget {
       height: height ?? Responsive.height(8, context),
       width: width ?? Responsive.width(15, context),
       color: color,
-      progressIndicatorBuilder: (context, url, downloadProgress) => Constant.loader(),
+      progressIndicatorBuilder: (context, url, downloadProgress) => Constant.simpleLoader(),
       errorWidget: (context, url, error) =>
           errorWidget ??
           Image.network(

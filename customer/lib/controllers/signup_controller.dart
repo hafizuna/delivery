@@ -53,6 +53,17 @@ class SignupController extends GetxController {
     return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
   }
 
+  // Helper function to normalize phone number (remove leading zeros and non-digits)
+  String _normalizePhoneNumber(String phoneNumber) {
+    // Remove all non-digit characters
+    String cleaned = phoneNumber.replaceAll(RegExp(r'\D'), '');
+    
+    // Remove leading zeros
+    cleaned = cleaned.replaceAll(RegExp(r'^0+'), '');
+    
+    return cleaned;
+  }
+
   // Alias method for signup screen compatibility
   Future<void> signUpWithPhoneAndPassword() async {
     return registerWithPhoneAndPassword();
@@ -112,9 +123,12 @@ class SignupController extends GetxController {
       // No FCM token needed for Node.js backend
       String? fcmToken;
 
+      // Normalize phone number before sending to API
+      String normalizedPhone = _normalizePhoneNumber(phoneController.text.trim());
+      
       // Call register API
       final response = await _apiService.register(
-        phoneNumber: phoneController.text.trim(),
+        phoneNumber: normalizedPhone,
         countryCode: selectedCountryCode.value,
         password: passwordController.text,
         firstName: firstNameController.text.trim(),

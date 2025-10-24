@@ -17,6 +17,9 @@ class HomeController extends GetxController {
   
   RxString searchQuery = ''.obs;
   RxString selectedCategory = ''.obs;
+  
+  // Cart item count
+  RxInt cartItemCount = 0.obs;
 
   @override
   void onInit() {
@@ -56,12 +59,16 @@ class HomeController extends GetxController {
       double? latitude = Constant.selectedLocation.latitude;
       double? longitude = Constant.selectedLocation.longitude;
       
+      print('🏠 Loading restaurants with location: lat=$latitude, lng=$longitude');
+      
       final response = await _apiService.getVendors(
         latitude: latitude,
         longitude: longitude,
         radius: Constant.radius,
         categoryId: selectedCategory.value.isEmpty ? null : selectedCategory.value,
       );
+      
+      print('🏪 API Response: ${response.length} restaurants found');
       
       allRestaurants.value = response.map((json) => VendorModel.fromJson(json)).toList();
       

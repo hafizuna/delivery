@@ -1,4 +1,5 @@
 import 'package:customer/app/home/home_screen.dart';
+import 'package:customer/app/orders/orders_screen.dart';
 import 'package:customer/controllers/dashboard_controller.dart';
 import 'package:customer/themes/app_them_data.dart';
 import 'package:customer/utils/dark_theme_provider.dart';
@@ -16,17 +17,27 @@ class DashBoardScreen extends StatelessWidget {
     return GetX<DashboardController>(
       init: DashboardController(),
       builder: (controller) {
-        return Scaffold(
-          body: PageView(
-            controller: controller.pageController,
-            onPageChanged: controller.onPageChanged,
-            physics: const NeverScrollableScrollPhysics(),
-            children: [
-              const HomeScreen(),
-              _buildPlaceholderScreen("Orders", themeChange),
-              _buildPlaceholderScreen("Profile", themeChange),
-            ],
-          ),
+        return PopScope(
+          canPop: false,
+          onPopInvoked: (didPop) {
+            if (!didPop) {
+              if (controller.onWillPop()) {
+                // Exit app
+              }
+            }
+          },
+          child: Scaffold(
+            body: PageView(
+              controller: controller.pageController,
+              onPageChanged: controller.onPageChanged,
+              physics: const NeverScrollableScrollPhysics(),
+              children: [
+                const HomeScreen(),
+                _buildPlaceholderScreen("Favourites", themeChange),
+                const OrdersScreen(),
+                _buildPlaceholderScreen("Profile", themeChange),
+              ],
+            ),
           bottomNavigationBar: Container(
             decoration: BoxDecoration(
               color: themeChange.getThem() ? AppThemeData.surfaceDark : AppThemeData.surface,
@@ -70,9 +81,22 @@ class DashBoardScreen extends StatelessWidget {
                 ),
                 BottomNavigationBarItem(
                   icon: SvgPicture.asset(
-                    "assets/icons/ic_order.svg",
+                    "assets/icons/ic_fav.svg",
                     colorFilter: ColorFilter.mode(
                       controller.selectedIndex.value == 1
+                          ? AppThemeData.primary300
+                          : (themeChange.getThem() ? AppThemeData.grey400 : AppThemeData.grey600),
+                      BlendMode.srcIn,
+                    ),
+                    height: 24,
+                  ),
+                  label: "Favourites".tr,
+                ),
+                BottomNavigationBarItem(
+                  icon: SvgPicture.asset(
+                    "assets/icons/ic_order.svg",
+                    colorFilter: ColorFilter.mode(
+                      controller.selectedIndex.value == 2
                           ? AppThemeData.primary300
                           : (themeChange.getThem() ? AppThemeData.grey400 : AppThemeData.grey600),
                       BlendMode.srcIn,
@@ -85,7 +109,7 @@ class DashBoardScreen extends StatelessWidget {
                   icon: SvgPicture.asset(
                     "assets/icons/ic_profile.svg",
                     colorFilter: ColorFilter.mode(
-                      controller.selectedIndex.value == 2
+                      controller.selectedIndex.value == 3
                           ? AppThemeData.primary300
                           : (themeChange.getThem() ? AppThemeData.grey400 : AppThemeData.grey600),
                       BlendMode.srcIn,
@@ -97,6 +121,7 @@ class DashBoardScreen extends StatelessWidget {
               ],
             ),
           ),
+        ),
         );
       },
     );

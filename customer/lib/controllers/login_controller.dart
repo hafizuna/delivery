@@ -36,6 +36,17 @@ class LoginController extends GetxController {
     selectedCountryCode.value = code;
   }
 
+  // Helper function to normalize phone number (remove leading zeros and non-digits)
+  String _normalizePhoneNumber(String phoneNumber) {
+    // Remove all non-digit characters
+    String cleaned = phoneNumber.replaceAll(RegExp(r'\D'), '');
+    
+    // Remove leading zeros
+    cleaned = cleaned.replaceAll(RegExp(r'^0+'), '');
+    
+    return cleaned;
+  }
+
   Future<void> loginWithPhoneAndPassword() async {
     // Validate inputs
     if (phoneController.text.trim().isEmpty) {
@@ -65,9 +76,12 @@ class LoginController extends GetxController {
       // No FCM token needed for Node.js backend
       String? fcmToken;
 
+      // Normalize phone number before sending to API
+      String normalizedPhone = _normalizePhoneNumber(phoneController.text.trim());
+
       // Call login API
       final response = await _apiService.login(
-        phoneNumber: phoneController.text.trim(),
+        phoneNumber: normalizedPhone,
         countryCode: selectedCountryCode.value,
         password: passwordController.text,
         fcmToken: fcmToken,

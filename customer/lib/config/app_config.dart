@@ -1,10 +1,41 @@
+import 'package:flutter/foundation.dart';
+
 class AppConfig {
-  // API Configuration
-  static const String baseUrl = 'http://localhost:3000/api/v1';
-  static const String socketUrl = 'http://localhost:3000';
+  // API Configuration - loaded from environment variables
+  static String get baseUrl {
+    return const String.fromEnvironment('API_BASE_URL', 
+      defaultValue: 'http://10.210.92.140:3000/api/v1');
+  }
   
-  // For physical device testing, replace localhost with your computer's IP
-  // Example: static const String baseUrl = 'http://192.168.1.100:3000/api/v1';
+  static String get socketUrl {
+    return const String.fromEnvironment('SOCKET_URL', 
+      defaultValue: 'http://10.210.92.140:3000');
+  }
+  
+  /// Google Maps API Key - loaded securely from environment variables
+  static String get googleMapsApiKey {
+    // Try to get from environment variable first (production)
+    const envKey = String.fromEnvironment('GOOGLE_MAPS_API_KEY');
+    if (envKey.isNotEmpty) {
+      return envKey;
+    }
+    
+    // Development fallback - only in debug mode
+    if (kDebugMode) {
+      return 'AIzaSyA_lmuxAbk7zGaWw1DVP9H_vRUQifAOP-I';
+    }
+    
+    // Production - should be set via environment or build configuration
+    throw Exception(
+      'Google Maps API Key not found. Please set GOOGLE_MAPS_API_KEY environment variable.'
+    );
+  }
+  
+  // Environment-based configuration:
+  // - Set API_BASE_URL and SOCKET_URL in .env file for development
+  // - Use --dart-define for production builds
+  // - For physical device testing, use your computer's IP address
+  // - Find your IP: ipconfig (Windows) or ifconfig (Mac/Linux)
   
   // API Endpoints
   static const String loginEndpoint = '/auth/login';

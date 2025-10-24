@@ -13,11 +13,15 @@ class SocketService {
   
   // Stream controllers for real-time updates
   final _orderStatusController = StreamController<Map<String, dynamic>>.broadcast();
+  final _orderCompletedController = StreamController<Map<String, dynamic>>.broadcast();
+  final _orderCancelledController = StreamController<Map<String, dynamic>>.broadcast();
   final _driverLocationController = StreamController<Map<String, dynamic>>.broadcast();
   final _chatMessageController = StreamController<Map<String, dynamic>>.broadcast();
   
   // Getters for streams
   Stream<Map<String, dynamic>> get orderStatusStream => _orderStatusController.stream;
+  Stream<Map<String, dynamic>> get orderCompletedStream => _orderCompletedController.stream;
+  Stream<Map<String, dynamic>> get orderCancelledStream => _orderCancelledController.stream;
   Stream<Map<String, dynamic>> get driverLocationStream => _driverLocationController.stream;
   Stream<Map<String, dynamic>> get chatMessageStream => _chatMessageController.stream;
   
@@ -95,11 +99,35 @@ class SocketService {
     });
     
     // Order completed
-    _socket!.on(AppConfig.socketOrderCompletedEvent, (data) {
+    _socket!.on('orderCompleted', (data) {
       if (kDebugMode) {
         print('✅ Order completed: $data');
       }
+      _orderCompletedController.add(data as Map<String, dynamic>);
+    });
+    
+    // Order cancelled
+    _socket!.on('orderCancelled', (data) {
+      if (kDebugMode) {
+        print('❌ Order cancelled: $data');
+      }
+      _orderCancelledController.add(data as Map<String, dynamic>);
+    });
+    
+    // Order status updated
+    _socket!.on('orderStatusUpdated', (data) {
+      if (kDebugMode) {
+        print('📦 Order status updated: $data');
+      }
       _orderStatusController.add(data as Map<String, dynamic>);
+    });
+    
+    // Driver location updated
+    _socket!.on('driverLocationUpdated', (data) {
+      if (kDebugMode) {
+        print('📍 Driver location updated: $data');
+      }
+      _driverLocationController.add(data as Map<String, dynamic>);
     });
     
     // Chat messages
@@ -189,10 +217,24 @@ class SocketService {
     }
   }
   
+  // ============== DRIVER LOCATION EVENTS ==============
+  
+  /// Request driver location update
+  void requestDriverLocation(String orderId) {
+    if (_socket != null && _socket!.connected) {
+      _socket!.emit('requestDriverLocation', {'orderId': orderId});
+      if (kDebugMode) {
+        print('📍 Requested driver location for order: $orderId');
+      }
+    }
+  }
+  
   // ============== CLEANUP ==============
   
   void dispose() {
     _orderStatusController.close();
+    _orderCompletedController.close();
+    _orderCancelledController.close();
     _driverLocationController.close();
     _chatMessageController.close();
     disconnect();

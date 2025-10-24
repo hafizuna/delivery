@@ -117,6 +117,27 @@ class ApiService {
     );
   }
   
+  // ============== GENERIC REQUEST METHOD ==============
+  
+  Future<Map<String, dynamic>> request(
+    String method,
+    String path, {
+    Map<String, dynamic>? data,
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    try {
+      final response = await _dio.request(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: Options(method: method),
+      );
+      return response.data;
+    } catch (e) {
+      rethrow;
+    }
+  }
+  
   // ============== AUTH ENDPOINTS ==============
   
   Future<Map<String, dynamic>> login({
@@ -228,7 +249,7 @@ class ApiService {
           if (categoryId != null) 'categoryId': categoryId,
         },
       );
-      return response.data['vendors'] ?? [];
+      return response.data['data'] ?? [];
     } catch (e) {
       rethrow;
     }
@@ -246,7 +267,7 @@ class ApiService {
   Future<List<dynamic>> getVendorCategories() async {
     try {
       final response = await _dio.get(AppConfig.vendorCategoriesEndpoint);
-      return response.data['categories'] ?? [];
+      return response.data['data'] ?? [];
     } catch (e) {
       rethrow;
     }
@@ -280,23 +301,49 @@ class ApiService {
     }
   }
   
-  Future<List<dynamic>> getOrders({String? status}) async {
+  
+  Future<Map<String, dynamic>> getOrderDetails(String orderId) async {
     try {
-      final response = await _dio.get(
-        AppConfig.ordersEndpoint,
-        queryParameters: {
-          if (status != null) 'status': status,
-        },
-      );
-      return response.data['orders'] ?? [];
+      final response = await _dio.get('${AppConfig.orderDetailsEndpoint}/$orderId');
+      return response.data;
     } catch (e) {
       rethrow;
     }
   }
   
-  Future<Map<String, dynamic>> getOrderDetails(String orderId) async {
+  Future<Map<String, dynamic>> getOrders({String? status, int? page, int? limit}) async {
     try {
-      final response = await _dio.get('${AppConfig.orderDetailsEndpoint}/$orderId');
+      final response = await _dio.get(
+        AppConfig.ordersEndpoint,
+        queryParameters: {
+          if (status != null) 'status': status,
+          if (page != null) 'page': page,
+          if (limit != null) 'limit': limit,
+        },
+      );
+      return response.data;
+    } catch (e) {
+      rethrow;
+    }
+  }
+  
+  Future<Map<String, dynamic>> getOrderById(String orderId) async {
+    try {
+      final response = await _dio.get('/orders/$orderId');
+      return response.data;
+    } catch (e) {
+      rethrow;
+    }
+  }
+  
+  Future<Map<String, dynamic>> cancelOrder(String orderId, {String? reason}) async {
+    try {
+      final response = await _dio.put(
+        '/orders/$orderId/cancel',
+        data: {
+          if (reason != null) 'reason': reason,
+        },
+      );
       return response.data;
     } catch (e) {
       rethrow;
@@ -344,7 +391,7 @@ class ApiService {
   Future<List<dynamic>> getZones() async {
     try {
       final response = await _dio.get(AppConfig.zonesEndpoint);
-      return response.data['zones'] ?? [];
+      return response.data['data'] ?? [];
     } catch (e) {
       rethrow;
     }

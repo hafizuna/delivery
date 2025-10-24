@@ -210,7 +210,7 @@ class LoginScreen extends StatelessWidget {
                         child: SvgPicture.asset(
                           controller.isPasswordVisible.value
                               ? "assets/icons/ic_password_show.svg"
-                              : "assets/icons/ic_password_hide.svg",
+                              : "assets/icons/ic_password_close.svg",
                           colorFilter: ColorFilter.mode(
                             themeChange.getThem() ? AppThemeData.grey300 : AppThemeData.grey600,
                             BlendMode.srcIn,
